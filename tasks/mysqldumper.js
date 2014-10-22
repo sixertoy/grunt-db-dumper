@@ -161,11 +161,11 @@ module.exports = function (grunt) {
         var target = 'local',
             deferred = Q.defer(),
             opts = taskOptions[target],
-            cmd = grunt.template.process(lodashTemplates.mysql, {data: opts});;
+            cmd = grunt.template.process(lodashTemplates.mysql, {data: opts});
         //
         grunt.log.subhead('Start backup database from ' + target);
         grunt.log.debug(cmd);
-        Shell.exec(cmd, {silent: true}, function(code, output){
+        Shell.exec(cmd, {silent: true}, function (code, output) {
             if (code !== 0) {
                 var err = new Error('Unable to dump local database');
                 deferred.reject(err);
@@ -200,11 +200,13 @@ module.exports = function (grunt) {
             }).then(function () {
                 return _backup(time);
 
-            }).then(function(content){
+            }).then(function (content) {
                 var file = Path.join(Path.normalize(taskOptions.options.path), time, 'local_' + taskOptions.local.database + '.sql');
                 grunt.file.write(file, content);
                 return true;
 
+            }).then(function () {
+                done();
 
             }).then(function (content) {
                 grunt.log.subhead('grunt db_pull task complete at ' + String(Date(time)));
