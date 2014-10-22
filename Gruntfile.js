@@ -31,22 +31,20 @@ module.exports = function (grunt) {
         // Configuration to be run (and then tested).
         mysqldumper: {
             options: {
-                target: 'integration',
                 path: 'dumps/'
             },
             local: {
                 user: 'root',
-                pasword: '',
-                host: '127.0.0.1',
-                database: 'diordefile'
+                password: '',
+                database: 'dumped',
+                host: '127.0.0.1'
             },
-            integration: {
+            distant: {
                 user: 'root',
-                pasword: '',
-                host: '127.0.0.1',
-                database: 'diordefile',
-                ssh: ''
-            },
+                password: '',
+                host: '192.168.1.61',
+                database: 'dumped'
+            }
         },
 
         // Unit tests.
