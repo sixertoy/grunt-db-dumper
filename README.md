@@ -1,6 +1,6 @@
 # grunt-db-dumper
 
-> The best Grunt plugin ever.
+> Pull MySQL datas from a distant DB to a MySQL local DB
 
 ## Getting Started
 This plugin requires Grunt `~0.4.5`
@@ -24,24 +24,33 @@ In your project's Gruntfile, add a section named `db_dumper` to the data object 
 
 ```js
 grunt.initConfig({
-  db_dumper: {
-    options: {
-      // Task-specific options go here.
+    mysqldumper: {
+        options: {
+            path: 'dumps/'
+        },
+        local: {
+            user: 'root',
+            password: '',
+            database: 'dumped',
+            host: '127.0.0.1'
+        },
+        distant: {
+            user: 'root',
+            password: '',
+            host: '192.168.1.61',
+            database: 'dumped'
+        }
     },
-    your_target: {
-      // Target-specific file lists and/or options go here.
-    },
-  },
 });
 ```
 
 ### Options
 
-#### options.separator
+#### options.path
 Type: `String`
-Default value: `',  '`
+Default value: `dumps/`
 
-A string value that is used to do something with whatever.
+Default dump/backup folder
 
 #### options.punctuation
 Type: `String`

@@ -1,6 +1,6 @@
 {
   "name": "grunt-db-dumper",
-  "description": "The best Grunt plugin ever.",
+  "description": "Pull MySQL datas from a distant DB to a MySQL local DB",
   "version": "0.1.0",
   "homepage": "https://github.com/malas34/grunt-db-dumper",
   "author": {
