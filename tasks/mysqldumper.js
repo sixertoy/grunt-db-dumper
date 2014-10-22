@@ -24,7 +24,8 @@ module.exports = function (grunt) {
 
     var lodashTemplates = {
             ssh: '<%= user %>@<%= host %>:<%= port %>',
-            mysql: 'mysqldump -u<%= user %> <%= database %>'
+            mysqldump: 'mysqldump -u<%= user %> <%= database %>',
+            mysql: 'mysql  -u<%= user %> <%= database %> < <%= file %>'
         },
         options = {
             options: {
@@ -78,7 +79,7 @@ module.exports = function (grunt) {
     function _execute(opts) {
         var buffers = [],
             deferred = Q.defer(),
-            cmd = grunt.template.process(lodashTemplates.mysql, {data: opts});
+            cmd = grunt.template.process(lodashTemplates.mysqldump, {data: opts});
         //
         grunt.log.debug(cmd);
         shell.exec(cmd, function (err, stream) {
@@ -110,18 +111,7 @@ module.exports = function (grunt) {
      *
      *
      */
-    function _writeBuffer(buffer, target, time, opts) {
-        // @TODO verif du save du fichier
-        // NodeJS File Exists
-        return true;
-    }
-
-    /**
-     *
-     *
-     *
-     */
-    function _dump(time) {
+    function _dump() {
         var target = 'distant',
             deferred = Q.defer(),
             opts = taskOptions[target];
@@ -132,18 +122,11 @@ module.exports = function (grunt) {
 
         }).then(function () {
             // grunt.log.subhead('Start pulling database from ' + opts.options.target + ' to local');
-            grunt.log.ok('SSH connected on ' + opts.host);
+            grunt.log.ok('Connected\r\n> ' + opts.host);
             return _execute(opts);
 
         }).then(function (buffer) {
-            grunt.log.ok('SSH dump success on ' + opts.host);
-            var file = Path.join(Path.normalize(taskOptions.options.path), time, target + '_' + opts.database + '.sql');
-            grunt.file.write(file, buffer);
-            return true;
-
-        }).then(function () {
-            grunt.log.ok('Dump complete on ' + target);
-            deferred.resolve();
+            deferred.resolve(buffer);
 
         }).catch(function (err) {
             deferred.reject(err);
@@ -157,11 +140,11 @@ module.exports = function (grunt) {
      * Backup data on a local database
      *
      */
-    function _backup(time) {
+    function _backup() {
         var target = 'local',
             deferred = Q.defer(),
             opts = taskOptions[target],
-            cmd = grunt.template.process(lodashTemplates.mysql, {data: opts});
+            cmd = grunt.template.process(lodashTemplates.mysqldump, {data: opts});
         //
         grunt.log.subhead('Start backup database from ' + target);
         grunt.log.debug(cmd);
@@ -178,6 +161,44 @@ module.exports = function (grunt) {
 
     /**
      *
+     *
+     *
+     */
+    function _write(content, time, target){
+        var file = Path.join(Path.normalize(taskOptions.options.path), time, target + '_' + taskOptions[target].database + '.sql');
+        grunt.file.write(file, content);
+        return file;
+    }
+
+    /**
+     *
+     *
+     *
+     */
+    function _replace(files, from, to){
+        // @TODO replace db local by distant
+        var target = from,
+            deferred = Q.defer(),
+            opts = taskOptions[to];
+
+        opts.file = files[target];
+        var cmd = grunt.template.process(lodashTemplates.mysql, {data: opts});
+        //
+        grunt.log.subhead('Start import database from ' + from + ' to ' + to);
+        grunt.log.debug(cmd);
+        Shell.exec(cmd, {silent: true}, function (code, output) {
+            if (code !== 0) {
+                var err = new Error('Unable to import ' + target + ' database');
+                deferred.reject(err);
+            } else {
+                deferred.resolve();
+            }
+        });
+        return deferred.promise;
+    }
+
+    /**
+     *
      * Pull data from a distant to a local Database
      *
      */
@@ -186,7 +207,8 @@ module.exports = function (grunt) {
         // Verification de la configuration
         // de la tache Grunt
         if (requires) {
-            var done = this.async(),
+            var files = {},
+                done = this.async(),
                 time = String(Date.now()),
                 taskConfig = grunt.config('mysqldumper');
 
@@ -195,18 +217,23 @@ module.exports = function (grunt) {
                 .merge(taskConfig);
 
             Q.fcall(function () {
-                return _dump(time);
+                return _dump();
 
-            }).then(function () {
-                return _backup(time);
+            }).then(function(buffer){
+                return _write(buffer, time, 'distant');
+
+            }).then(function (file) {
+                files.distant = file;
+                grunt.log.ok('Success\r\n> ' + file);
+                return _backup();
 
             }).then(function (content) {
-                var file = Path.join(Path.normalize(taskOptions.options.path), time, 'local_' + taskOptions.local.database + '.sql');
-                grunt.file.write(file, content);
-                return true;
+                return _write(content, time, 'local');
 
-            }).then(function () {
-                done();
+            }).then(function (file) {
+                files.local = file;
+                grunt.log.ok('Success\r\n> ' + file);
+                return _replace(files, 'distant', 'local');
 
             }).then(function (content) {
                 grunt.log.subhead('grunt db_pull task complete at ' + String(Date(time)));
