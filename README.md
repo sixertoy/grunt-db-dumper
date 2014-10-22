@@ -20,25 +20,18 @@ grunt.loadNpmTasks('grunt-db-dumper');
 ## The "db_dumper" task
 
 ### Overview
-In your project's Gruntfile, add a section named `db_dumper` to the data object passed into `grunt.initConfig()`.
+In your project's Gruntfile, add a section named `mysqldumper` to the data object passed into `grunt.initConfig()`.
 
 ```js
 grunt.initConfig({
     mysqldumper: {
-        options: {
-            path: 'dumps/'
-        },
         local: {
-            user: 'root',
-            password: '',
             database: 'dumped',
             host: '127.0.0.1'
         },
         distant: {
-            user: 'root',
-            password: '',
-            host: '192.168.1.61',
-            database: 'dumped'
+            database: 'dumped',
+            host: '192.168.1.61'
         }
     },
 });
@@ -52,43 +45,74 @@ Default value: `dumps/`
 
 Default dump/backup folder
 
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
+#### [target]
+Type: `Object`
 
-A string value that is used to do something else with whatever else.
+Config object for a local mysql connection
+
+#### [target].ssh
+Type: `Boolean`
+Default value: `false`
+
+Use SSH connection
+
+#### [target].database
+Type: `String`
+
+Database name to push/pull
+
+#### [target].host
+Type: `String`
+
+Host ip/name
+
+#### [target].port
+Type: `Integer`
+Default value: `22`
+
+SSH port connection
+
+#### [target].user
+Type: `String`
+Default value: `root`
+
+SSH/MySQL user
+
+#### [target].password
+Type: `String`
+Default value: `false`
+
+SSH/MySQL password
 
 ### Usage Examples
 
-#### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
-
 ```js
 grunt.initConfig({
-  db_dumper: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
+    mysqldumper: {
+        options: {
+            path: 'dumps/'
+        },
+        local: {
+            database: 'dumped',
+            host: '127.0.0.1'
+        },
+        distant: {
+            ssh: true,
+            port: 22,
+            user: 'root',
+            password: '1234superpassword',
+            database: 'dumped',
+            host: '192.168.1.61'
+        }
     },
-  },
 });
 ```
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+```bash
+$ grunt db_pull
 
-```js
-grunt.initConfig({
-  db_dumper: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-});
+# Debug
+$ grunt db_pull --debug
 ```
 
 ## Contributing

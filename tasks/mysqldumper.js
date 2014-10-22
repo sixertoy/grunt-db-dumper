@@ -35,11 +35,10 @@ module.exports = function (grunt) {
                 ssh: false,
                 port: 22,
                 user: 'root',
-                password: false,
-                host: '127.0.0.1'
+                password: false
             },
             distant: {
-                ssh: true,
+                ssh: false,
                 port: 22,
                 user: 'root',
                 password: false
